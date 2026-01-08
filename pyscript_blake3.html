@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PyScript + Blake3 PoC</title>
+    <link rel="stylesheet" href="https://pyscript.net/releases/2025.11.2/core.css">
+    <script type="module" src="https://pyscript.net/releases/2025.11.2/core.js"></script>
+    <style>
+        body {
+            font-family: system-ui, sans-serif;
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 20px;
+            background: #ffffff;
+            color: #000000;
+        }
+
+        h1 {
+            color: #000000;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 10px;
+            font-size: 15px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        button {
+            background: #f0f0f0;
+            color: #000;
+            border: 1px solid #ccc;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 15px;
+        }
+
+        button:hover {
+            background: #e0e0e0;
+        }
+
+        button:disabled {
+            background: #f9f9f9;
+            color: #999;
+            cursor: wait;
+        }
+
+        #output {
+            background: #ffffff;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 15px;
+            min-height: 150px;
+            font-family: monospace;
+            font-size: 13px;
+            white-space: pre-wrap;
+            color: #000;
+        }
+
+        .success {
+            color: #006600;
+        }
+
+        .info {
+            color: #0044cc;
+        }
+
+        .loading {
+            color: #999;
+            font-style: italic;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- PyScript configuration: load blake3 wheel from local dist folder -->
+    <py-config type="toml">
+        packages = ["./static/blake3-1.0.8-cp313-cp313-emscripten_4_0_9_wasm32.whl"]
+    </py-config>
+
+    <h1>PyScript + Blake3 PoC</h1>
+    <p class="subtitle">Blake3 hashing inside Pyodide via PyScript</p>
+
+    <div class="input-group">
+        <input type="text" id="input" value="Hello KERI!" placeholder="Enter text to hash">
+        <button id="hashBtn" py-click="hash_input">Hash with Blake3</button>
+    </div>
+
+    <div id="output"><span class="loading">Loading PyScript and Blake3... (may take 10-20s first time)</span></div>
+
+    <!-- Python code for blake3 hashing -->
+    <script type="py">
+import blake3
+from pyscript import document
+
+def log(msg, css_class="info"):
+    """Append a message to the output div."""
+    output = document.querySelector("#output")
+    time = __import__('datetime').datetime.now().strftime("%H:%M:%S.%f")[:-3]
+    output.innerHTML += f'<span class="{css_class}">[{time}] {msg}</span>\n'
+
+def clear_output():
+    """Clear the output div."""
+    document.querySelector("#output").innerHTML = ""
+
+def hash_input(event):
+    """Hash the input text using blake3."""
+    clear_output()
+    
+    # Get input text
+    text = document.querySelector("#input").value
+    log(f"Input text: \"{text}\"")
+    
+    # Hash with blake3
+    hasher = blake3.blake3(text.encode('utf-8'))
+    hex_digest = hasher.hexdigest()
+    
+    log(f"Blake3 hash (hex): {hex_digest}", "success")
+    log(f"Hash length: {len(hex_digest)} hex chars = {len(hex_digest)//2} bytes", "info")
+    
+    # Also show first 32 chars (128-bit truncated) for comparison
+    log(f"Truncated (128-bit): {hex_digest[:32]}", "info")
+
+# Signal that PyScript and blake3 are ready
+clear_output()
+log("PyScript loaded successfully!", "success")
+log(f"blake3 version: {blake3.__version__}", "info")
+log("Ready to hash. Enter text and click 'Hash with Blake3'.", "info")
+    </script>
+</body>
+
+</html>
