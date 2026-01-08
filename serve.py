@@ -25,6 +25,7 @@ class CORSHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
 if __name__ == '__main__':
     with socketserver.TCPServer(("", PORT), CORSHTTPRequestHandler) as httpd:
         print(f"Serving at http://localhost:{PORT}")
+        print(f"Serving blake3 test at http://localhost:{PORT}/pyscript_blake3.html")
         try:
             httpd.serve_forever()
         except KeyboardInterrupt:
