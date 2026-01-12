@@ -94,13 +94,14 @@
     <p class="subtitle">Testing all packages in Pyodide via PyScript</p>
 
     <div class="input-group">
-        <button id="testBtn" py-click="run_tests">Run All Package Tests</button>
+        <button id="pkgTestBtn" py-click="run_tests">Run Package Tests</button>
+        <button id="sodTestBtn" py-click="run_pysodium_tests">Run Pysodium Verification</button>
     </div>
 
     <div id="output"><span class="loading">Loading PyScript and packages... (may take 30-60s first time)</span></div>
 
-    <!-- Load Python test script with config -->
-    <script type="py" src="./package_tests.py" config="pyscript.toml"></script>
+    <script type="py" src="./python/package_tests.py" config="pyscript.toml"></script>
+    <script type="py" src="./python/test_pysodium.py" config="pyscript.toml"></script>
 </body>
 
 </html>

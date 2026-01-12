@@ -1,10 +1,11 @@
 # PyScript configuration for package tests
 # for a fully offline build we would need the pyodide.js locally
-interpreter = "https://cdn.jsdelivr.net/pyodide/v0.29.1/full/pyodide.js"
+# interpreter = "https://cdn.jsdelivr.net/pyodide/v0.29.1/full/pyodide.js"
 
 packages = [
     # Local wheel
     "./static/blake3-1.0.8-cp313-cp313-emscripten_4_0_9_wasm32.whl",
+    "./static/pysodium-0.7.18-py3-none-any.whl",
     # Built-in Pyodide packages
     "jsonschema",
     "setuptools",

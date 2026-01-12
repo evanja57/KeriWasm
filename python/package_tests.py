@@ -2,8 +2,8 @@
 Package verification tests for PyScript/Pyodide environment.
 Each test exercises a basic function from the imported package.
 """
-from pyscript import document
 import datetime
+from pyscript import document
 
 
 def log(msg: str, css_class: str = "info"):
@@ -291,4 +291,4 @@ def hash_input(event):
 # Initialize on load
 clear_output()
 log("PyScript loaded! All packages ready.", "success")
-log("Click 'Run All Package Tests' to verify each package.", "info")
+log("Click a test button to begin.", "info")
