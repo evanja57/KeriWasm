@@ -149,9 +149,8 @@ def _run_suite():
     log("----------------------------------------------------------------")
 
 
-async def _run_pysodium_tests():
+def run_pysodium_tests(event):
     clear_output()
-    # await js.sodium.ready
     log("Starting pysodium tests...", "info")
 
     stdout = sys.stdout
@@ -170,6 +169,3 @@ async def _run_pysodium_tests():
         sys.stdout = stdout
         sys.stderr = stderr
 
-
-def run_pysodium_tests(event):
-    asyncio.ensure_future(_run_pysodium_tests())

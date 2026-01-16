@@ -26,3 +26,7 @@ packages = [
     "ordered-set",
     "cbor2",
 ]
+
+# Fetch files that need to be imported at runtime
+[files]
+"./python/pysodium_unittest.py" = "./pysodium_unittest.py"
