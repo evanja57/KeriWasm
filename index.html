@@ -1,9 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
+    ta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KERI WASM POC</title>
+    <title>PyScript PoC</title>
+    <link rel="stylesheet" href="https://pyscript.net/releases/2025.11.2/core.css">
+    <script type="module" src="https://pyscript.net/releases/2025.11.2/core.js"></script>
     <style>
         body {
             font-family: system-ui, sans-serif;
@@ -13,7 +16,31 @@
             background: #ffffff;
             color: #000000;
         }
-        h1 { color: #000000; }
+
+        h1 {
+            color: #000000;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 10px;
+            font-size: 15px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
         button {
             background: #f0f0f0;
             color: #000;
@@ -24,93 +51,63 @@
             font-weight: 500;
             font-size: 15px;
         }
-        button:hover { background: #e0e0e0; }
-        button:disabled { background: #f9f9f9; color: #999; cursor: wait; }
+
+        button:hover {
+            background: #e0e0e0;
+        }
+
+        button:disabled {
+            background: #f9f9f9;
+            color: #999;
+            cursor: wait;
+        }
+
         #output {
             background: #ffffff;
             border: 1px solid #ddd;
             border-radius: 4px;
             padding: 15px;
-            margin-top: 20px;
-            min-height: 200px;
+            min-height: 150px;
             font-family: monospace;
             font-size: 13px;
             white-space: pre-wrap;
             color: #000;
         }
-        .success { color: #006600; }
-        .error { color: #cc0000; }
-        .info { color: #0044cc; }
+
+        .success {
+            color: #006600;
+        }
+
+        .info {
+            color: #0044cc;
+        }
+
+        .fail {
+            color: #cc0000;
+        }
+
+        .loading {
+            color: #999;
+            font-style: italic;
+        }
     </style>
 </head>
+
 <body>
-    <h1>KERI WASM POC</h1>
-    <p>Python (Pyodide) ↔ js ↔ libsodium.js roundtrip</p>
-    <button id="runBtn" onclick="runTest()">Run Crypto Roundtrip</button>
-    <div id="output"></div>
+    <h1>PyScript + Package Tests</h1>
+    <p class="subtitle">Testing all packages in Pyodide via PyScript</p>
 
-    <script>
-        const output = document.getElementById('output');
-        const runBtn = document.getElementById('runBtn');
-        
-        let agentWorker = null;
-        let cryptoWorker = null;
+    <div class="input-group">
+        <button id="pkgTestBtn" py-click="run_tests">Run Package Tests</button>
+        <button id="sodTestBtn" py-click="run_pysodium_tests">Run Pysodium Verification</button>
+        <button id="fullTestBtn" py-click="run_full_suite">Run Full Pysodium Tests</button>
+    </div>
 
-        function log(msg, type = 'info') {
-            const time = new Date().toISOString().substr(11, 12);
-            output.innerHTML += `<span class="${type}">[${time}] ${msg}</span>\n`;
-            output.scrollTop = output.scrollHeight;
-        }
+    <div id="output"><span class="loading">Loading PyScript and packages... (may take 30-60s first time)</span></div>
 
-        // Initialize workers on page load
-        window.onload = function() {
-            log('Initializing workers...');
-            
-            cryptoWorker = new Worker('workers/crypto_worker.js');
-            agentWorker = new Worker('workers/agent_worker.js');
-            
-            const channel = new MessageChannel();
-            
-            cryptoWorker.onmessage = e => {
-                if (e.data.type === 'ready') log('Crypto worker ready (libsodium)', 'success');
-                else if (e.data.type === 'log') log(`[Crypto] ${e.data.msg}`);
-            };
-            
-            agentWorker.onmessage = e => {
-                const { type, msg, result } = e.data;
-                if (type === 'ready') {
-                    log('Agent worker ready (Pyodide)', 'success');
-                    runBtn.disabled = false;
-                }
-                else if (type === 'log') log(`[Agent] ${msg}`);
-                else if (type === 'result') {
-                    log('─'.repeat(50));
-                    log(`Message: "${result.message}"`, 'info');
-                    log(`Hash:    ${result.hash}`, 'success');
-                    log(`Signed:  ${result.signature.substring(0, 64)}...`, 'success');
-                    log(`Verified: ${result.verified}`, result.verified ? 'success' : 'error');
-                    log('─'.repeat(50));
-                    runBtn.disabled = false;
-                }
-                else if (type === 'error') {
-                    log(`Error: ${msg}`, 'error');
-                    runBtn.disabled = false;
-                }
-            };
-            
-            // Transfer ports to workers
-            cryptoWorker.postMessage({ type: 'init', port: channel.port1 }, [channel.port1]);
-            agentWorker.postMessage({ type: 'init', port: channel.port2 }, [channel.port2]);
-            
-            runBtn.disabled = true;
-            log('Waiting for Pyodide to load (may take 10-20s)...');
-        };
-
-        function runTest() {
-            runBtn.disabled = true;
-            log('Running Python → Crypto → Python roundtrip...');
-            agentWorker.postMessage({ type: 'test', message: 'Hello KERI!' });
-        }
-    </script>
+    <script type="py" src="./python/package_tests.py" config="pyscript.toml"></script>
+    <script type="py" src="./python/test_pysodium.py" config="pyscript.toml"></script>
+    <script type="py" src="./python/run_pysodium_suite.py" config="pyscript.toml"></script>
 </body>
+
 </html>
