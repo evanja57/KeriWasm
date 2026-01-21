@@ -2,9 +2,12 @@
 <html lang="en">
 
 <head>
-    ta charset="UTF-8">
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PyScript PoC</title>
+    <!-- <script>
+        globalThis.pyodideOptions = { memory: { initial: 128, maximum: 2048 } };
+    </script> -->
     <link rel="stylesheet" href="https://pyscript.net/releases/2025.11.2/core.css">
     <script type="module" src="https://pyscript.net/releases/2025.11.2/core.js"></script>
     <style>
@@ -99,15 +102,15 @@
 
     <div class="input-group">
         <button id="pkgTestBtn" py-click="run_tests">Run Package Tests</button>
-        <button id="sodTestBtn" py-click="run_pysodium_tests">Run Pysodium Verification</button>
         <button id="fullTestBtn" py-click="run_full_suite">Run Full Pysodium Tests</button>
+        <button id="liboqsTestBtn" py-click="run_liboqs_suite">Run Liboqs Tests</button>
     </div>
 
     <div id="output"><span class="loading">Loading PyScript and packages... (may take 30-60s first time)</span></div>
 
     <script type="py" src="./python/package_tests.py" config="pyscript.toml"></script>
-    <script type="py" src="./python/test_pysodium.py" config="pyscript.toml"></script>
     <script type="py" src="./python/run_pysodium_suite.py" config="pyscript.toml"></script>
+    <script type="py" src="./python/run_liboqs_suite.py" config="pyscript.toml"></script>
 </body>
 
 </html>
