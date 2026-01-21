@@ -29,7 +29,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import unittest
 import binascii
-import pysodium
+try:
+    import pychloride as pysodium
+except ImportError:
+    import pysodium
 
 
 

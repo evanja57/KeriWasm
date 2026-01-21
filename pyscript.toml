@@ -5,8 +5,10 @@
 packages = [
     # Local wheel
     "./static/blake3-1.0.8-cp313-cp313-emscripten_4_0_9_wasm32.whl",
-    "./static/pysodium-0.7.18-py3-none-any.whl",
+    "pyoqs-wasm",
+    "pychloride",
     # Built-in Pyodide packages
+    "micropip",
     "jsonschema",
     "setuptools",
     "msgpack",
@@ -25,8 +27,32 @@ packages = [
     "qrcode",
     "ordered-set",
     "cbor2",
+    "pyasn1",
+    "pyasn1-alt-modules",
 ]
 
 # Fetch files that need to be imported at runtime
 [files]
+# Pysodium tests
 "./python/pysodium_unittest.py" = "./pysodium_unittest.py"
+
+# Liboqs tests
+"./python/test_kem.py" = "./test_kem.py"
+"./python/test_sig.py" = "./test_sig.py"
+"./python/test_stfl_sig.py" = "./test_stfl_sig.py"
+"./python/test_runner_doer.py" = "./test_runner_doer.py"
+"./python/test_loaders.py" = "./test_loaders.py"
+
+# Hio package
+"./python/hio/__init__.py" = "./hio/__init__.py"
+"./python/hio/hioing.py" = "./hio/hioing.py"
+"./python/hio/base/__init__.py" = "./hio/base/__init__.py"
+"./python/hio/base/basing.py" = "./hio/base/basing.py"
+"./python/hio/base/doing.py" = "./hio/base/doing.py"
+"./python/hio/base/tyming.py" = "./hio/base/tyming.py"
+"./python/hio/help/__init__.py" = "./hio/help/__init__.py"
+"./python/hio/help/timing.py" = "./hio/help/timing.py"
+"./python/hio/help/helping.py" = "./hio/help/helping.py"
+
+# Hio bridge for browser
+"./python/hio_bridge.py" = "./hio_bridge.py"
