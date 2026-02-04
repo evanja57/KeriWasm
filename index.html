@@ -100,14 +100,84 @@
     <div class="input-group">
         <button id="pkgTestBtn" py-click="run_tests">Run Package Tests</button>
         <button id="fullTestBtn" py-click="run_full_suite">Run Full Pysodium Tests</button>
-        <button id="liboqsTestBtn" py-click="run_liboqs_suite">Run Liboqs Tests</button>
+        <button id="liboqsTestBtn">Run Liboqs Tests</button>
+        <button id="hioClientBtn" py-click="run_hio_client_bridge">Run Hio Client (JS bridge)</button>
+        <button id="blake3TestBtn" py-click="run_blake3_suite">Run Blake3 Tests</button>
+        <button id="indexeddbTestBtn" py-click="run_indexeddb_suite">Run IndexedDB Tests</button>
+        <button id="indexeddbProbeBtn" py-click="run_indexeddb_probe">Run IndexedDB Probe</button>
     </div>
 
     <div id="output"><span class="loading">Loading PyScript and packages... (may take 30-60s first time)</span></div>
 
     <script type="py" src="./python/package_tests.py" config="pyscript.toml"></script>
     <script type="py" src="./python/run_pysodium_suite.py" config="pyscript.toml"></script>
-    <script type="py" src="./python/run_liboqs_suite.py" config="pyscript.toml"></script>
+    <script type="py" src="./python/run_blake3_suite.py" config="pyscript.toml"></script>
+    <script type="py" src="./python/run_hio_client_bridge.py" config="pyscript.toml"></script>
+    <script type="py" src="./python/run_indexeddb_suite.py" config="pyscript.toml"></script>
+    <script type="py" src="./python/indexeddb_probe.py" config="pyscript.toml"></script>
+
+    <script type="module">
+        const output = document.getElementById("output");
+        const liboqsBtn = document.getElementById("liboqsTestBtn");
+        let liboqsWorker = null;
+        let liboqsRunning = false;
+
+        function setLiboqsRunning(running) {
+            liboqsRunning = running;
+            liboqsBtn.disabled = running;
+            liboqsBtn.textContent = running ? "Running Liboqs Tests..." : "Run Liboqs Tests";
+        }
+
+        function appendBatch(entries) {
+            if (!entries || entries.length === 0) return;
+            let html = "";
+            for (const entry of entries) {
+                html += `<span class="${entry.css}">[${entry.time}] ${entry.msg}</span>\n`;
+            }
+            output.insertAdjacentHTML("beforeend", html);
+            output.scrollTop = output.scrollHeight;
+        }
+
+        function ensureLiboqsWorker() {
+            if (liboqsWorker) return liboqsWorker;
+            liboqsWorker = new Worker("./workers/liboqs_worker.js");
+            liboqsWorker.onmessage = (event) => {
+                const { type, state, entries, error } = event.data || {};
+                if (type === "log-batch") {
+                    appendBatch(entries);
+                    return;
+                }
+                if (type === "status") {
+                    if (state === "done" || state === "error") {
+                        setLiboqsRunning(false);
+                    }
+                    if (state === "error" && error) {
+                        appendBatch([{
+                            time: new Date().toLocaleTimeString("en-US", { hour12: false }) + "." + String(new Date().getMilliseconds()).padStart(3, "0"),
+                            msg: error.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"),
+                            css: "fail"
+                        }]);
+                    }
+                }
+            };
+            liboqsWorker.onerror = (event) => {
+                setLiboqsRunning(false);
+                appendBatch([{
+                    time: new Date().toLocaleTimeString("en-US", { hour12: false }) + "." + String(new Date().getMilliseconds()).padStart(3, "0"),
+                    msg: String(event.message || "Liboqs worker error").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"),
+                    css: "fail"
+                }]);
+            };
+            return liboqsWorker;
+        }
+
+        liboqsBtn.addEventListener("click", () => {
+            if (liboqsRunning) return;
+            output.innerHTML = '<span class="loading">Starting liboqs worker...</span>\n';
+            setLiboqsRunning(true);
+            ensureLiboqsWorker().postMessage({ type: "run" });
+        });
+    </script>
 </body>
 
 </html>
