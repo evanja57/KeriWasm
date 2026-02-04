@@ -10,4 +10,4 @@ Excludes ogling (logging) and other optional modules
 
 from .timing import Timer, MonoTimer, TimerError, RetroTimerError
 # Excluded: from .decking import Deck
-# Excluded: from .hicting import Hict, Mict
+from .hicting import Hict, Mict

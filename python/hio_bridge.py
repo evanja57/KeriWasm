@@ -6,6 +6,12 @@ and integrates with the JavaScript event loop via Pyodide's webloop.
 """
 
 import asyncio
+import inspect
+
+try:
+    from hio.base import doing
+except Exception:  # allow import without hio installed
+    doing = None
 
 
 class WebDoist:
@@ -163,7 +169,49 @@ async def test_hio():
 
 
 # Export for easy access
-__all__ = ['WebDoist', 'test_hio', 'test_hio_crypto_roundtrip']
+if doing is not None:
+    class AsyncRecurDoer(doing.Doer):
+        """
+        Adapter for async recur semantics in hio.
+
+        Subclass this and implement `async def recur_async(self): ...`.
+        The sync `recur` method schedules the coroutine and polls for completion.
+        """
+
+        def __init__(self, **kwa):
+            super().__init__(**kwa)
+            self._async_task = None
+            self._async_result = None
+
+        async def recur_async(self):
+            """Override in subclasses. Return truthy when done."""
+            return True
+
+        def recur(self, tyme):
+            if self._async_task is None:
+                if not inspect.iscoroutinefunction(self.recur_async):
+                    raise TypeError("recur_async must be an async def coroutine function")
+                loop = asyncio.get_event_loop()
+                self._async_task = loop.create_task(self.recur_async())
+                return False
+
+            if not self._async_task.done():
+                return False
+
+            self._async_result = self._async_task.result()
+            return bool(self._async_result)
+
+        def close(self):
+            if self._async_task and not self._async_task.done():
+                self._async_task.cancel()
+            super().close()
+else:
+    class AsyncRecurDoer:
+        def __init__(self, **kwa):
+            raise ImportError("hio is required to use AsyncRecurDoer")
+
+
+__all__ = ['WebDoist', 'AsyncRecurDoer', 'test_hio', 'test_hio_crypto_roundtrip']
 
 
 async def test_hio_crypto_roundtrip(message="Hello KERI!"):
