@@ -4,7 +4,7 @@
 
 packages = [
     # Local wheel
-    "./static/blake3-1.0.8-cp313-cp313-emscripten_4_0_9_wasm32.whl",
+    "./static/blake3-1.0.8-cp313-cp313-pyodide_2025_0_wasm32.whl",
     "pyoqs-wasm",
     "pychloride",
     # Built-in Pyodide packages
@@ -53,6 +53,27 @@ packages = [
 "./python/hio/help/__init__.py" = "./hio/help/__init__.py"
 "./python/hio/help/timing.py" = "./hio/help/timing.py"
 "./python/hio/help/helping.py" = "./hio/help/helping.py"
+"./python/hio/help/hicting.py" = "./hio/help/hicting.py"
+
+# Hio HTTP parser subset for JS-bridge prototype
+"./python/hio/core/__init__.py" = "./hio/core/__init__.py"
+"./python/hio/core/http/__init__.py" = "./hio/core/http/__init__.py"
+"./python/hio/core/http/httping.py" = "./hio/core/http/httping.py"
+
+# Hio HTTP client JS-bridge prototype
+"./python/hio_http_client_bridge.py" = "./hio_http_client_bridge.py"
+"./python/run_hio_client_bridge.py" = "./run_hio_client_bridge.py"
 
 # Hio bridge for browser
 "./python/hio_bridge.py" = "./hio_bridge.py"
+
+# Blake3 tests
+"./python/test_blake3.py" = "./test_blake3.py"
+"./python/test_vectors.json" = "./test_vectors.json"
+
+# IndexedDB probe
+"./python/indexeddb_probe.py" = "./indexeddb_probe.py"
+
+# IndexedDB tests
+"./python/indexeddb_python.py" = "./indexeddb_python.py"
+"./python/test_indexeddb.py" = "./test_indexeddb.py"

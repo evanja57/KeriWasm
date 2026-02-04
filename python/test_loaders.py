@@ -161,3 +161,37 @@ def load_all_liboqs_tests() -> List[TestEntry]:
     tests.extend(load_sig_tests())
     tests.extend(load_stfl_sig_tests())
     return tests
+
+
+def load_blake3_tests() -> List[TestEntry]:
+    """
+    Load blake3 tests from test_blake3 module.
+    
+    Returns:
+        List of (name, func, args) tuples ready for TestRunnerDoer.
+    """
+    tests: List[TestEntry] = []
+    
+    try:
+        import test_blake3
+        
+        tests.append(("=== BLAKE3 TESTS ===", None, ()))
+        
+        # test_blake3 has an ALL_TESTS list of test functions
+        for test_func in test_blake3.ALL_TESTS:
+            tests.append((f"blake3.{test_func.__name__}", test_func, ()))
+        
+    except Exception as e:
+        tests.append((f"ERROR loading test_blake3: {e}", None, ()))
+    
+    return tests
+
+
+def load_all_blake3_tests() -> List[TestEntry]:
+    """
+    Load all blake3 tests.
+    
+    Returns:
+        Combined list of all blake3 test entries.
+    """
+    return load_blake3_tests()
