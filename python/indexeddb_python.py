@@ -823,12 +823,6 @@ class IndexedDBer:
             store = tx.objectStore(db)
             return await _await_request(store.count())
 
-    async def cntAll(self, db: str) -> int:
-        """
-        Backward-compatible alias for cnt().
-        """
-        return await self.cnt(db)
-    
     # Iteration (buffered)
     async def getTopItemIter(self, db: str, top: bytes = b'') -> list[tuple[bytes, bytes]]:
         """
