@@ -4,7 +4,7 @@ test_indexeddb.py - Browser-based tests for IndexedDB core API.
 
 Core API surface covered in this file:
 - putVal / setVal / getVal / delVal
-- cnt / cntAll
+- cnt
 - getTopItemIter
 - db=<store> keyword compatibility
 """
@@ -140,22 +140,19 @@ async def test_prefix_iteration(dber, store):
     assert b"ABC.002" in keys
 
 
-async def test_cntAll_alias(dber, store):
-    """Test cntAll remains an alias of cnt."""
-    await dber.setVal(store, b"cntall_alias_key", b"v")
-    assert await dber.cntAll(store) == await dber.cnt(store)
-    await dber.delVal(store, b"cntall_alias_key")
-
-
 async def test_indexeddber_db_kw_compat(dber, store):
     """Test db=<store> keyword compatibility for LMDBer parity."""
     key = b"class_db_kw_key"
     val = b"class_db_kw_val"
 
+    await dber.delVal(db=store, key=key)
+    baseline = await dber.cnt(db=store)
+
     assert await dber.setVal(db=store, key=key, val=val) is True
     assert await dber.getVal(db=store, key=key) == val
-    assert await dber.cntAll(db=store) == await dber.cnt(db=store)
+    assert await dber.cnt(db=store) == baseline + 1
     assert await dber.delVal(db=store, key=key) is True
+    assert await dber.cnt(db=store) == baseline
 
 
 async def test_empty_key_val_raises_KeyError(dber, store):
@@ -214,7 +211,6 @@ async def run_all_tests():
                 ("test_del", test_del),
                 ("test_non_utf8_key_roundtrip", test_non_utf8_key_roundtrip),
                 ("test_prefix_iteration", test_prefix_iteration),
-                ("test_cntAll_alias", test_cntAll_alias),
                 ("test_indexeddber_db_kw_compat", test_indexeddber_db_kw_compat),
             ],
         ),
