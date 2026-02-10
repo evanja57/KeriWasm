@@ -1,11 +1,5 @@
 # -*- encoding: utf-8 -*-
 """
-indexeddb_keripy.py - IndexedDB Backend for keripy Browser Wallet
-
-This module provides an IndexedDB-based database backend for keripy when running
-in a browser via Pyodide/PyScript. It maps LMDB's synchronous B-tree operations
-to IndexedDB's async B-tree operations.
-
 IndexedDB provides:
 - Lexicographic key ordering (like LMDB) for encoded byte keys
 - O(log n) cursor positioning
@@ -29,9 +23,6 @@ Usage:
     db = await IndexedDBer.open(name="keri-wallet", stores=["evts", "kels", "pdes"])
     await db.setVal("evts", b"key", b"value")
     val = await db.getVal("evts", b"key")
-
-Author: Refactored for keripy browser wallet
-License: Apache-2.0 (matching keripy)
 """
 
 from __future__ import annotations
