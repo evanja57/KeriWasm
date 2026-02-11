@@ -12,6 +12,8 @@ ROOT = Path(__file__).resolve().parents[1]
 
 REQUIRED_PATHS = [
     "index.html",
+    "pyscript-smoke.toml",
+    "pages/ci-smoke.html",
     "pages/test-harness.html",
     "workers/liboqs_worker.js",
     "pyscript.toml",
@@ -95,7 +97,7 @@ def main() -> int:
                 missing_local_packages += 1
 
     html_refs_checked = 0
-    for html_rel in ("index.html", "pages/test-harness.html"):
+    for html_rel in ("index.html", "pages/ci-smoke.html", "pages/test-harness.html"):
         html_path = ROOT / html_rel
         if not html_path.exists():
             continue
