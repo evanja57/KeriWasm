@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KeriWasm Test Harness (Architecture POC)</title>
+    <link rel="stylesheet" href="https://pyscript.net/releases/2025.11.2/core.css">
+    <script type="module" src="https://pyscript.net/releases/2025.11.2/core.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style>
+        #output .success {
+            color: #166534;
+        }
+
+        #output .info {
+            color: #1d4ed8;
+        }
+
+        #output .fail {
+            color: #b91c1c;
+        }
+
+        #output .loading {
+            color: #64748b;
+            font-style: italic;
+        }
+    </style>
+</head>
+
+<body class="min-h-screen bg-slate-100 text-slate-900">
+    <main class="mx-auto max-w-5xl px-4 py-8">
+        <header class="mb-6 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+            <p class="text-xs font-semibold uppercase tracking-widest text-slate-500">KeriWasm Architecture POC</p>
+            <h1 class="mt-1 text-2xl font-semibold">Client Templates + PyScript State/Effects + Worker Offload</h1>
+            <p class="mt-2 text-sm text-slate-600">
+                This page reuses existing test runners and worker code. It is not wallet functionality.
+            </p>
+            <div class="mt-4 flex flex-wrap items-center gap-2">
+                <span id="statusBadge" class="rounded-md bg-slate-200 px-2 py-1 text-xs font-medium text-slate-700">Ready</span>
+                <a href="/index.html" class="rounded-md border border-slate-300 px-2 py-1 text-xs font-medium hover:bg-slate-100">
+                    Open legacy test page
+                </a>
+            </div>
+        </header>
+
+        <section class="mb-6 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+            <h2 class="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">Runs</h2>
+            <div id="runGrid" class="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3"></div>
+        </section>
+
+        <section class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+            <div class="mb-3 flex items-center justify-between gap-2">
+                <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500">Output</h2>
+                <button id="clearOutputBtn" class="rounded-md border border-slate-300 px-3 py-1.5 text-xs font-medium hover:bg-slate-100">
+                    Clear Output
+                </button>
+            </div>
+            <div id="output" class="min-h-64 rounded-lg border border-slate-200 bg-slate-50 p-4 font-mono text-xs whitespace-pre-wrap text-slate-800">
+                <span class="text-slate-500">Click a run button to begin.</span>
+            </div>
+        </section>
+    </main>
+
+    <template id="run-card-template">
+        <button type="button"
+            class="run-card rounded-lg border border-slate-300 bg-white p-4 text-left transition hover:border-slate-400 hover:bg-slate-50 disabled:cursor-wait disabled:opacity-60">
+            <p class="run-label text-sm font-semibold text-slate-900"></p>
+            <p class="run-detail mt-1 text-xs text-slate-600"></p>
+        </button>
+    </template>
+
+    <script type="module">
+        let liboqsWorker = null;
+        let liboqsRunning = false;
+
+        function setLiboqsRunning(running) {
+            liboqsRunning = running;
+            window.__keriwasmLiboqsRunning = running;
+        }
+
+        function forwardBatch(entries) {
+            if (!entries || entries.length === 0) return;
+            if (typeof window.__keriwasmOnWorkerBatch === "function") {
+                window.__keriwasmOnWorkerBatch(entries);
+            }
+        }
+
+        function forwardStatus(state, error = "") {
+            if (typeof window.__keriwasmOnWorkerStatus === "function") {
+                window.__keriwasmOnWorkerStatus(state, error);
+            }
+        }
+
+        function ensureLiboqsWorker() {
+            if (liboqsWorker) return liboqsWorker;
+            liboqsWorker = new Worker("/workers/liboqs_worker.js");
+            liboqsWorker.onmessage = (event) => {
+                const { type, state, entries, error } = event.data || {};
+                if (type === "log-batch") {
+                    forwardBatch(entries || []);
+                    return;
+                }
+                if (type === "status") {
+                    if (state === "done" || state === "error") {
+                        setLiboqsRunning(false);
+                    }
+                    forwardStatus(state || "unknown", String(error || ""));
+                }
+            };
+            liboqsWorker.onerror = (event) => {
+                setLiboqsRunning(false);
+                forwardStatus("error", String(event.message || "Liboqs worker error"));
+            };
+            return liboqsWorker;
+        }
+
+        window.startLiboqsRun = () => {
+            if (liboqsRunning) return false;
+            setLiboqsRunning(true);
+            forwardStatus("starting", "");
+            ensureLiboqsWorker().postMessage({ type: "run" });
+            return true;
+        };
+
+        window.__keriwasmLiboqsRunning = false;
+        window.__keriwasmOnWorkerBatch = null;
+        window.__keriwasmOnWorkerStatus = null;
+    </script>
+
+    <script type="py" src="/python/runners/test_harness_app.py" config="/pyscript.toml"></script>
+</body>
+
+</html>
