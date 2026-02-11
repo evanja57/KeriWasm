@@ -6,29 +6,20 @@ reconstruct a raw HTTP response, and parse it with hio's Respondent.
 """
 
 import asyncio
-import datetime
 
 import js  # type: ignore
-from pyscript import document, fetch
+from pyscript import fetch
 
-from hio_http_client_bridge import Requester, Respondent
+from core import ui_log
+from core.hio_http_client_bridge import Requester, Respondent
 
 
 def log(msg: str, css_class: str = "info") -> None:
-    output = document.querySelector("#output")
-    if output is None:
-        print(msg)
-        return
-    time = datetime.datetime.now().strftime("%H:%M:%S.%f")[:-3]
-    msg = str(msg).replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
-    output.innerHTML += f'<span class="{css_class}">[{time}] {msg}</span>\n'
-    output.scrollTop = output.scrollHeight
+    ui_log.emit(msg, css_class)
 
 
 def clear_output() -> None:
-    output = document.querySelector("#output")
-    if output:
-        output.innerHTML = ""
+    ui_log.clear()
 
 
 async def _run_hio_client_bridge_async() -> None:
@@ -45,8 +36,14 @@ async def _run_hio_client_bridge_async() -> None:
         port = "443" if scheme == "https" else "80"
 
     # Build request using hio Requester
-    requester = Requester(method="GET", path="/index.html", hostname=hostname, port=int(port), scheme=scheme)
-    request_bytes = requester.rebuild()
+    requester = Requester(
+        method="GET",
+        path="/index.html",
+        hostname=hostname,
+        port=int(port),
+        scheme=scheme,
+    )
+    requester.rebuild()
     log("Built request via hio Requester:")
     for line in requester.lines[:5]:
         log(f"  {line.decode('iso-8859-1')}")
@@ -107,4 +104,4 @@ async def _run_hio_client_bridge_async() -> None:
 
 
 def run_hio_client_bridge(event):
-    asyncio.ensure_future(_run_hio_client_bridge_async())
+    return asyncio.ensure_future(_run_hio_client_bridge_async())

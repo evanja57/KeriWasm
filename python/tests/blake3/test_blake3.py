@@ -15,6 +15,7 @@ from typing import (
     Dict,
     cast,
 )
+
 if sys.version_info >= (3, 12):
     from collections.abc import Buffer
 else:
@@ -25,6 +26,7 @@ from blake3 import blake3, __version__
 # Try to import numpy - may not be available in all Pyodide builds
 try:
     import numpy
+
     HAS_NUMPY = True
 except ImportError:
     HAS_NUMPY = False
@@ -292,9 +294,9 @@ def test_copy_with_threads() -> None:
     assert expected2 == h2.digest(), "Update state of copy diverged from expected state"
 
     h2.update(b3)
-    assert (
-        h2.digest() == h3.digest()
-    ), "Update state of copy diverged from expected state"
+    assert h2.digest() == h3.digest(), (
+        "Update state of copy diverged from expected state"
+    )
 
 
 def test_version() -> None:
@@ -308,9 +310,9 @@ def test_version() -> None:
 def test_invalid_max_threads() -> None:
     # Skip in browser/Pyodide - the C implementation for WASM doesn't validate
     # max_threads the same way since multithreading isn't supported
-    if sys.platform == 'emscripten':
+    if sys.platform == "emscripten":
         return  # Skip in browser
-    
+
     # Check 0.
     try:
         blake3(max_threads=0)

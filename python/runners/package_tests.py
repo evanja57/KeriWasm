@@ -2,15 +2,18 @@
 Package verification tests for PyScript/Pyodide environment.
 Each test exercises a basic function from the imported package.
 """
-import datetime
-from pyscript import document
+
+from core import ui_log
+
+try:
+    from pyscript import document
+except ImportError:
+    document = None
 
 
 def log(msg: str, css_class: str = "info"):
-    """Append a message to the output div."""
-    output = document.querySelector("#output")
-    time = datetime.datetime.now().strftime("%H:%M:%S.%f")[:-3]
-    output.innerHTML += f'<span class="{css_class}">[{time}] {msg}</span>\n'
+    """Emit a structured log entry."""
+    ui_log.emit(msg, css_class)
 
 
 def result(name: str, passed: bool, detail: str = ""):
@@ -30,6 +33,7 @@ def run_all_tests():
     # --- blake3 ---
     try:
         import blake3
+
         h = blake3.blake3(b"test").hexdigest()
         if result("blake3", len(h) == 64, f"hash={h[:16]}..."):
             passed += 1
@@ -42,6 +46,7 @@ def run_all_tests():
     # --- jsonschema ---
     try:
         import jsonschema
+
         schema = {"type": "string"}
         jsonschema.validate("hello", schema)
         if result("jsonschema", True, "validate() worked"):
@@ -55,6 +60,7 @@ def run_all_tests():
     # --- msgpack ---
     try:
         import msgpack
+
         data = {"key": "value", "num": 42}
         packed = msgpack.packb(data)
         unpacked = msgpack.unpackb(packed)
@@ -69,6 +75,7 @@ def run_all_tests():
     # --- multidict ---
     try:
         from multidict import MultiDict
+
         md = MultiDict([("a", 1), ("a", 2)])
         if result("multidict", md.getall("a") == [1, 2], "MultiDict works"):
             passed += 1
@@ -81,6 +88,7 @@ def run_all_tests():
     # --- pyyaml ---
     try:
         import yaml
+
         data = yaml.safe_load("key: value\nnum: 42")
         if result("pyyaml", data == {"key": "value", "num": 42}, "safe_load works"):
             passed += 1
@@ -93,6 +101,7 @@ def run_all_tests():
     # --- cryptography (Fernet) ---
     try:
         from cryptography.fernet import Fernet
+
         key = Fernet.generate_key()
         f = Fernet(key)
         msg = b"secret"
@@ -108,7 +117,10 @@ def run_all_tests():
     # --- multicommand ---
     try:
         import multicommand
-        if result("multicommand", hasattr(multicommand, "create_parser"), "module loaded"):
+
+        if result(
+            "multicommand", hasattr(multicommand, "create_parser"), "module loaded"
+        ):
             passed += 1
         else:
             failed += 1
@@ -119,7 +131,8 @@ def run_all_tests():
     # --- hjson ---
     try:
         import hjson
-        data = hjson.loads('key: value\nnum: 42')
+
+        data = hjson.loads("key: value\nnum: 42")
         if result("hjson", data["key"] == "value", "parse hjson"):
             passed += 1
         else:
@@ -131,8 +144,11 @@ def run_all_tests():
     # --- apispec ---
     try:
         from apispec import APISpec
+
         spec = APISpec(title="Test", version="1.0.0", openapi_version="3.0.0")
-        if result("apispec", spec.to_dict()["info"]["title"] == "Test", "APISpec created"):
+        if result(
+            "apispec", spec.to_dict()["info"]["title"] == "Test", "APISpec created"
+        ):
             passed += 1
         else:
             failed += 1
@@ -143,6 +159,7 @@ def run_all_tests():
     # --- mnemonic ---
     try:
         from mnemonic import Mnemonic
+
         m = Mnemonic("english")
         words = m.generate(128)
         if result("mnemonic", len(words.split()) == 12, "12-word phrase generated"):
@@ -156,6 +173,7 @@ def run_all_tests():
     # --- prettytable ---
     try:
         from prettytable import PrettyTable
+
         t = PrettyTable(["Name", "Age"])
         t.add_row(["Alice", 30])
         output = t.get_string()
@@ -170,6 +188,7 @@ def run_all_tests():
     # --- http-sfv ---
     try:
         import http_sfv
+
         item = http_sfv.Item()
         item.parse(b"42")
         if result("http-sfv", item.value == 42, "parse integer"):
@@ -183,6 +202,7 @@ def run_all_tests():
     # --- semver ---
     try:
         import semver
+
         v = semver.Version.parse("1.2.3")
         if result("semver", v.major == 1 and v.minor == 2, "parse version"):
             passed += 1
@@ -195,6 +215,7 @@ def run_all_tests():
     # --- qrcode ---
     try:
         import qrcode
+
         qr = qrcode.QRCode(version=1)
         qr.add_data("test")
         qr.make(fit=True)
@@ -209,6 +230,7 @@ def run_all_tests():
     # --- ordered-set ---
     try:
         from ordered_set import OrderedSet
+
         s = OrderedSet([3, 1, 2, 1])
         if result("ordered-set", list(s) == [3, 1, 2], "preserves order, dedupes"):
             passed += 1
@@ -221,6 +243,7 @@ def run_all_tests():
     # --- cbor2 ---
     try:
         import cbor2
+
         data = {"key": "value", "num": 42}
         encoded = cbor2.dumps(data)
         decoded = cbor2.loads(encoded)
@@ -235,6 +258,7 @@ def run_all_tests():
     # --- setuptools ---
     try:
         import setuptools
+
         if result("setuptools", hasattr(setuptools, "setup"), "module loaded"):
             passed += 1
         else:
@@ -246,6 +270,7 @@ def run_all_tests():
     # --- wheel ---
     try:
         import wheel
+
         if result("wheel", hasattr(wheel, "__version__"), f"v{wheel.__version__}"):
             passed += 1
         else:
@@ -258,8 +283,8 @@ def run_all_tests():
 
 
 def clear_output():
-    """Clear the output div."""
-    document.querySelector("#output").innerHTML = ""
+    """Clear the active output sink."""
+    ui_log.clear()
 
 
 def run_tests(event):
@@ -267,9 +292,9 @@ def run_tests(event):
     clear_output()
     log("Starting package tests...", "info")
     log("-----------------------------")
-    
+
     passed, failed = run_all_tests()
-    
+
     log("-----------------------------")
     summary_class = "success" if failed == 0 else "fail"
     log(f"SUMMARY: {passed} passed, {failed} failed", summary_class)
@@ -278,17 +303,22 @@ def run_tests(event):
 def hash_input(event):
     """Hash the input text using blake3 (button handler)."""
     import blake3
+
     clear_output()
-    text = document.querySelector("#input").value
+    if document is None:
+        log("No document available for hash_input()", "fail")
+        return
+    input_el = document.querySelector("#input")
+    if input_el is None:
+        log("No #input element found for hash_input()", "fail")
+        return
+    text = input_el.value
     log(f'Input: "{text}"')
-    
-    h = blake3.blake3(text.encode('utf-8'))
+
+    h = blake3.blake3(text.encode("utf-8"))
     hex_digest = h.hexdigest()
-    
+
     log(f"Blake3: {hex_digest}", "success")
 
 
-# Initialize on load
-clear_output()
-log("PyScript loaded! All packages ready.", "success")
-log("Click a test button to begin.", "info")
+# Intentionally no side effects on import.

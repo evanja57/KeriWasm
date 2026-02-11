@@ -12,21 +12,18 @@ import js  # type: ignore
 
 
 def _escape(msg: str) -> str:
-    return (
-        str(msg)
-        .replace("&", "&amp;")
-        .replace("<", "&lt;")
-        .replace(">", "&gt;")
-    )
+    return str(msg).replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
 
 
 def log(msg: str, css_class: str = "info") -> None:
     time = datetime.datetime.now().strftime("%H:%M:%S.%f")[:-3]
-    payload = json.dumps({
-        "time": time,
-        "msg": _escape(msg),
-        "css": css_class,
-    })
+    payload = json.dumps(
+        {
+            "time": time,
+            "msg": _escape(msg),
+            "css": css_class,
+        }
+    )
     js.enqueueLiboqsLogJson(payload)
 
 
@@ -36,10 +33,10 @@ async def run() -> None:
     log("")
 
     try:
-        from hio_bridge import WebDoist
-        import test_runner_doer
-        from test_runner_doer import TestRunnerDoer
-        from test_loaders import load_all_liboqs_tests
+        from core.hio_bridge import WebDoist
+        from core import test_runner_doer
+        from core.test_runner_doer import TestRunnerDoer
+        from core.test_loaders import load_all_liboqs_tests
 
         # Route all test_runner_doer logging into the worker logger
         test_runner_doer.log = log
@@ -47,12 +44,14 @@ async def run() -> None:
     except Exception as exc:
         log(f"FAILED to load components: {exc}", "fail")
         import traceback
+
         log(traceback.format_exc(), "fail")
         js.flushLiboqsLogs()
         return
 
     try:
         import oqs
+
         log(f"liboqs version: {oqs.oqs_version()}", "success")
         log(f"Enabled KEMs: {len(oqs.get_enabled_kem_mechanisms())}")
         log(f"Enabled SIGs: {len(oqs.get_enabled_sig_mechanisms())}")
@@ -60,6 +59,7 @@ async def run() -> None:
     except Exception as exc:
         log(f"FAILED to import oqs: {exc}", "fail")
         import traceback
+
         log(traceback.format_exc(), "fail")
         js.flushLiboqsLogs()
         return
@@ -85,6 +85,7 @@ async def run() -> None:
     except Exception as exc:
         log(f"Test execution failed: {exc}", "fail")
         import traceback
+
         log(traceback.format_exc(), "fail")
 
     log("")

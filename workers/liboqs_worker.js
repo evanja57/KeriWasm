@@ -49,13 +49,17 @@ self.enqueueLiboqsLogJson = (payload) => {
 };
 
 const PY_FILES = [
-    { url: "/python/run_liboqs_worker.py", path: "/run_liboqs_worker.py" },
-    { url: "/python/test_runner_doer.py", path: "/test_runner_doer.py" },
-    { url: "/python/test_loaders.py", path: "/test_loaders.py" },
-    { url: "/python/test_kem.py", path: "/test_kem.py" },
-    { url: "/python/test_sig.py", path: "/test_sig.py" },
-    { url: "/python/test_stfl_sig.py", path: "/test_stfl_sig.py" },
-    { url: "/python/hio_bridge.py", path: "/hio_bridge.py" },
+    { url: "/python/runners/run_liboqs_worker.py", path: "/run_liboqs_worker.py" },
+    { url: "/python/core/__init__.py", path: "/core/__init__.py" },
+    { url: "/python/core/test_runner_doer.py", path: "/core/test_runner_doer.py" },
+    { url: "/python/core/test_loaders.py", path: "/core/test_loaders.py" },
+    { url: "/python/core/hio_bridge.py", path: "/core/hio_bridge.py" },
+    { url: "/python/core/ui_log.py", path: "/core/ui_log.py" },
+    { url: "/python/tests/__init__.py", path: "/tests/__init__.py" },
+    { url: "/python/tests/liboqs/__init__.py", path: "/tests/liboqs/__init__.py" },
+    { url: "/python/tests/liboqs/test_kem.py", path: "/tests/liboqs/test_kem.py" },
+    { url: "/python/tests/liboqs/test_sig.py", path: "/tests/liboqs/test_sig.py" },
+    { url: "/python/tests/liboqs/test_stfl_sig.py", path: "/tests/liboqs/test_stfl_sig.py" },
     { url: "/python/hio/__init__.py", path: "/hio/__init__.py" },
     { url: "/python/hio/hioing.py", path: "/hio/hioing.py" },
     { url: "/python/hio/base/__init__.py", path: "/hio/base/__init__.py" },
@@ -64,6 +68,7 @@ const PY_FILES = [
     { url: "/python/hio/base/tyming.py", path: "/hio/base/tyming.py" },
     { url: "/python/hio/help/__init__.py", path: "/hio/help/__init__.py" },
     { url: "/python/hio/help/helping.py", path: "/hio/help/helping.py" },
+    { url: "/python/hio/help/hicting.py", path: "/hio/help/hicting.py" },
     { url: "/python/hio/help/timing.py", path: "/hio/help/timing.py" },
 ];
 
@@ -97,7 +102,7 @@ async function initPyodide() {
     pyodideReady = (async () => {
         importScripts(PYODIDE_JS);
         pyodide = await loadPyodide({ indexURL: PYODIDE_INDEX_URL });
-        await pyodide.loadPackage(["micropip"]);
+        await pyodide.loadPackage(["micropip", "multidict"]);
 
         await loadPyFiles();
 
@@ -106,7 +111,7 @@ async function initPyodide() {
 import sys, micropip
 if "/" not in sys.path:
     sys.path.insert(0, "/")
-await micropip.install(["${wheelUrl}"])
+await micropip.install(["ordered-set", "${wheelUrl}"])
 `);
 
         return pyodide;
