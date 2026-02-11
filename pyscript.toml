@@ -33,15 +33,48 @@ packages = [
 
 # Fetch files that need to be imported at runtime
 [files]
-# Pysodium tests
-"./python/pysodium_unittest.py" = "./pysodium_unittest.py"
+# Runner package
+"./python/runners/__init__.py" = "./runners/__init__.py"
+"./python/runners/package_tests.py" = "./runners/package_tests.py"
+"./python/runners/run_pysodium_suite.py" = "./runners/run_pysodium_suite.py"
+"./python/runners/run_blake3_suite.py" = "./runners/run_blake3_suite.py"
+"./python/runners/run_hio_client_bridge.py" = "./runners/run_hio_client_bridge.py"
+"./python/runners/run_indexeddb_suite.py" = "./runners/run_indexeddb_suite.py"
+"./python/runners/indexeddb_probe.py" = "./runners/indexeddb_probe.py"
+"./python/runners/run_liboqs_suite.py" = "./runners/run_liboqs_suite.py"
+"./python/runners/run_liboqs_worker.py" = "./runners/run_liboqs_worker.py"
+"./python/runners/test_harness_app.py" = "./runners/test_harness_app.py"
+
+# Core modules
+"./python/core/__init__.py" = "./core/__init__.py"
+"./python/core/hio_bridge.py" = "./core/hio_bridge.py"
+"./python/core/hio_http_client_bridge.py" = "./core/hio_http_client_bridge.py"
+"./python/core/indexeddb_python.py" = "./core/indexeddb_python.py"
+"./python/core/test_runner_doer.py" = "./core/test_runner_doer.py"
+"./python/core/test_loaders.py" = "./core/test_loaders.py"
+"./python/core/ui_log.py" = "./core/ui_log.py"
+
+# Test packages
+"./python/tests/__init__.py" = "./tests/__init__.py"
 
 # Liboqs tests
-"./python/test_kem.py" = "./test_kem.py"
-"./python/test_sig.py" = "./test_sig.py"
-"./python/test_stfl_sig.py" = "./test_stfl_sig.py"
-"./python/test_runner_doer.py" = "./test_runner_doer.py"
-"./python/test_loaders.py" = "./test_loaders.py"
+"./python/tests/liboqs/__init__.py" = "./tests/liboqs/__init__.py"
+"./python/tests/liboqs/test_kem.py" = "./tests/liboqs/test_kem.py"
+"./python/tests/liboqs/test_sig.py" = "./tests/liboqs/test_sig.py"
+"./python/tests/liboqs/test_stfl_sig.py" = "./tests/liboqs/test_stfl_sig.py"
+
+# Blake3 tests
+"./python/tests/blake3/__init__.py" = "./tests/blake3/__init__.py"
+"./python/tests/blake3/test_blake3.py" = "./tests/blake3/test_blake3.py"
+"./python/tests/blake3/test_vectors.json" = "./tests/blake3/test_vectors.json"
+
+# IndexedDB tests
+"./python/tests/indexeddb/__init__.py" = "./tests/indexeddb/__init__.py"
+"./python/tests/indexeddb/test_indexeddb.py" = "./tests/indexeddb/test_indexeddb.py"
+
+# Pysodium tests
+"./python/tests/pysodium/__init__.py" = "./tests/pysodium/__init__.py"
+"./python/tests/pysodium/pysodium_unittest.py" = "./tests/pysodium/pysodium_unittest.py"
 
 # Hio package
 "./python/hio/__init__.py" = "./hio/__init__.py"
@@ -59,21 +92,3 @@ packages = [
 "./python/hio/core/__init__.py" = "./hio/core/__init__.py"
 "./python/hio/core/http/__init__.py" = "./hio/core/http/__init__.py"
 "./python/hio/core/http/httping.py" = "./hio/core/http/httping.py"
-
-# Hio HTTP client JS-bridge prototype
-"./python/hio_http_client_bridge.py" = "./hio_http_client_bridge.py"
-"./python/run_hio_client_bridge.py" = "./run_hio_client_bridge.py"
-
-# Hio bridge for browser
-"./python/hio_bridge.py" = "./hio_bridge.py"
-
-# Blake3 tests
-"./python/test_blake3.py" = "./test_blake3.py"
-"./python/test_vectors.json" = "./test_vectors.json"
-
-# IndexedDB probe
-"./python/indexeddb_probe.py" = "./indexeddb_probe.py"
-
-# IndexedDB tests
-"./python/indexeddb_python.py" = "./indexeddb_python.py"
-"./python/test_indexeddb.py" = "./test_indexeddb.py"

@@ -27,6 +27,28 @@
             margin-bottom: 30px;
         }
 
+        .page-links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .page-link {
+            display: inline-block;
+            background: #f8f8f8;
+            color: #000;
+            border: 1px solid #ccc;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 14px;
+            text-decoration: none;
+        }
+
+        .page-link:hover {
+            background: #ececec;
+        }
+
         .input-group {
             display: flex;
             gap: 10px;
@@ -97,6 +119,11 @@
     <h1>PyScript + Package Tests</h1>
     <p class="subtitle">Testing all packages in Pyodide via PyScript</p>
 
+    <div class="page-links">
+        <a class="page-link" href="/index.html">Legacy Test Harness (This Page)</a>
+        <a class="page-link" href="/pages/test-harness.html">Architecture POC Harness</a>
+    </div>
+
     <div class="input-group">
         <button id="pkgTestBtn" py-click="run_tests">Run Package Tests</button>
         <button id="fullTestBtn" py-click="run_full_suite">Run Full Pysodium Tests</button>
@@ -109,12 +136,12 @@
 
     <div id="output"><span class="loading">Loading PyScript and packages... (may take 30-60s first time)</span></div>
 
-    <script type="py" src="./python/package_tests.py" config="pyscript.toml"></script>
-    <script type="py" src="./python/run_pysodium_suite.py" config="pyscript.toml"></script>
-    <script type="py" src="./python/run_blake3_suite.py" config="pyscript.toml"></script>
-    <script type="py" src="./python/run_hio_client_bridge.py" config="pyscript.toml"></script>
-    <script type="py" src="./python/run_indexeddb_suite.py" config="pyscript.toml"></script>
-    <script type="py" src="./python/indexeddb_probe.py" config="pyscript.toml"></script>
+    <script type="py" src="./python/runners/package_tests.py" config="pyscript.toml"></script>
+    <script type="py" src="./python/runners/run_pysodium_suite.py" config="pyscript.toml"></script>
+    <script type="py" src="./python/runners/run_blake3_suite.py" config="pyscript.toml"></script>
+    <script type="py" src="./python/runners/run_hio_client_bridge.py" config="pyscript.toml"></script>
+    <script type="py" src="./python/runners/run_indexeddb_suite.py" config="pyscript.toml"></script>
+    <script type="py" src="./python/runners/indexeddb_probe.py" config="pyscript.toml"></script>
 
     <script type="module">
         const output = document.getElementById("output");

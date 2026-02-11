@@ -6,11 +6,10 @@ This avoids hio's TCP client and uses only the HTTP message build/parse logic.
 """
 
 import json
-import copy
 import random
 
 from collections import deque
-from urllib.parse import urlsplit, quote, quote_plus, unquote, unquote_plus
+from urllib.parse import urlsplit, quote, quote_plus
 
 from hio.help import Hict
 from hio.core.http import httping
@@ -25,32 +24,35 @@ class Requester(object):
     """
     Nonblocking HTTP Client Requester class (HTTP message builder only).
     """
+
     HttpVersionString = httping.HTTP_11_VERSION_STRING  # http version string
     Port = httping.HTTP_PORT  # default port
 
-    def __init__(self,
-                 hostname='127.0.0.1',
-                 port=None,
-                 scheme=u'http',
-                 method=u'GET',  # unicode
-                 path=u'/',  # unicode
-                 qargs=None,
-                 fragment=u'',  # unicode
-                 headers=None,
-                 body=b'',
-                 data=None,
-                 fargs=None,
-                 portOptional=False):
+    def __init__(
+        self,
+        hostname="127.0.0.1",
+        port=None,
+        scheme="http",
+        method="GET",  # unicode
+        path="/",  # unicode
+        qargs=None,
+        fragment="",  # unicode
+        headers=None,
+        body=b"",
+        data=None,
+        fargs=None,
+        portOptional=False,
+    ):
         self.hostname, self.port = httping.normalizeHostPort(hostname, port, 80)
         self.scheme = scheme
-        self.method = method.upper() if method else u'GET'
-        self.path = path or u'/'
+        self.method = method.upper() if method else "GET"
+        self.path = path or "/"
         self.qargs = qargs if qargs is not None else dict()
         self.fragment = fragment
         self.headers = Hict(headers) if headers else Hict()
         if body and isinstance(body, str):
-            body = body.encode('iso-8859-1')
-        self.body = body or b''
+            body = body.encode("iso-8859-1")
+        self.body = body or b""
         self.data = data
         self.fargs = fargs
         self.portOptional = True if portOptional else False
@@ -59,19 +61,21 @@ class Requester(object):
         self.head = b""  # keep around for testing
         self.msg = b""
 
-    def reinit(self,
-               hostname=None,
-               port=None,
-               scheme=None,
-               method=None,
-               path=None,
-               qargs=None,
-               fragment=None,
-               headers=None,
-               body=None,
-               data=None,
-               fargs=None,
-               portOptional=None):
+    def reinit(
+        self,
+        hostname=None,
+        port=None,
+        scheme=None,
+        method=None,
+        path=None,
+        qargs=None,
+        fragment=None,
+        headers=None,
+        body=None,
+        data=None,
+        fargs=None,
+        portOptional=None,
+    ):
         if hostname is not None:
             self.hostname = hostname
         if port is not None:
@@ -90,7 +94,7 @@ class Requester(object):
             self.headers = Hict(headers)
         if body is not None:
             if body and isinstance(body, str):
-                body = body.encode('iso-8859-1')
+                body = body.encode("iso-8859-1")
             self.body = body
         if data is not None:
             self.data = data
@@ -99,26 +103,49 @@ class Requester(object):
         if portOptional is not None:
             self.portOptional = True if portOptional else False
 
-    def rebuild(self,
-                hostname=None,
-                port=None,
-                scheme=None,
-                method=None,
-                path=None,
-                qargs=None,
-                fragment=None,
-                headers=None,
-                body=None,
-                data=None,
-                fargs=None,
-                portOptional=None):
-        if (hostname is not None or port is not None or scheme is not None or
-                method is not None or path is not None or qargs is not None or
-                fragment is not None or headers is not None or body is not None or
-                data is not None or fargs is not None or portOptional is not None):
-            self.reinit(hostname=hostname, port=port, scheme=scheme, method=method,
-                        path=path, qargs=qargs, fragment=fragment, headers=headers,
-                        body=body, data=data, fargs=fargs, portOptional=portOptional)
+    def rebuild(
+        self,
+        hostname=None,
+        port=None,
+        scheme=None,
+        method=None,
+        path=None,
+        qargs=None,
+        fragment=None,
+        headers=None,
+        body=None,
+        data=None,
+        fargs=None,
+        portOptional=None,
+    ):
+        if (
+            hostname is not None
+            or port is not None
+            or scheme is not None
+            or method is not None
+            or path is not None
+            or qargs is not None
+            or fragment is not None
+            or headers is not None
+            or body is not None
+            or data is not None
+            or fargs is not None
+            or portOptional is not None
+        ):
+            self.reinit(
+                hostname=hostname,
+                port=port,
+                scheme=scheme,
+                method=method,
+                path=path,
+                qargs=qargs,
+                fragment=fragment,
+                headers=headers,
+                body=body,
+                data=data,
+                fargs=fargs,
+                portOptional=portOptional,
+            )
 
         return self.build()
 
@@ -135,18 +162,25 @@ class Requester(object):
 
         scheme = pathSplits.scheme
         if scheme and scheme != self.scheme:
-            raise ValueError("Already open connection attempt to change scheme  "
-                             " to '{0}'".format(scheme))
+            raise ValueError(
+                "Already open connection attempt to change scheme   to '{0}'".format(
+                    scheme
+                )
+            )
 
         port = pathSplits.port
         if port and port != self.port:
-            raise ValueError("Already open connection attempt to change port  "
-                             " to '{0}'".format(port))
+            raise ValueError(
+                "Already open connection attempt to change port   to '{0}'".format(port)
+            )
 
         hostname = pathSplits.hostname
         if hostname and hostname != self.hostname:
-            raise ValueError("Already open connection attempt to change hostname  "
-                             " to '{0}'".format(hostname))
+            raise ValueError(
+                "Already open connection attempt to change hostname   to '{0}'".format(
+                    hostname
+                )
+            )
 
         query = pathSplits.query
         self.qargs, query = httping.updateQargsQuery(self.qargs, query)
@@ -155,37 +189,39 @@ class Requester(object):
         if fragment:
             self.fragment = fragment
 
-        combine = u"{0}?{1}#".format(path, query, fragment)
+        combine = "{0}?{1}#{2}".format(path, query, fragment)
         combine = urlsplit(combine).geturl()
 
         startLine = "{0} {1} {2}".format(self.method, combine, self.HttpVersionString)
         try:
-            startLine = startLine.encode('ascii')
+            startLine = startLine.encode("ascii")
         except UnicodeEncodeError:
-            startLine = startLine.encode('idna')
+            startLine = startLine.encode("idna")
         self.lines.append(startLine)
 
-        if u'host' not in self.headers:
+        if "host" not in self.headers:
             host = self.hostname
             port = self.port
             if not self.portOptional:
-                if ((self.scheme == u'http' and port != 80) or
-                        (self.scheme == u'https' and port != 443)):
+                if (self.scheme == "http" and port != 80) or (
+                    self.scheme == "https" and port != 443
+                ):
                     host = "{0}:{1}".format(host, port)
-                self.headers[u'host'] = host
+                self.headers["host"] = host
             else:
-                if ((self.scheme == u'http' and port != 80) or
-                        (self.scheme == u'https' and port != 443)):
+                if (self.scheme == "http" and port != 80) or (
+                    self.scheme == "https" and port != 443
+                ):
                     host = "{0}:{1}".format(host, port)
-                self.headers[u'host'] = host
+                self.headers["host"] = host
 
-        if u'accept-encoding' not in self.headers:
-            self.headers[u'accept-encoding'] = u'identity'
+        if "accept-encoding" not in self.headers:
+            self.headers["accept-encoding"] = "identity"
 
         body = b""
         if self.data is not None:
-            body = json.dumps(self.data).encode('utf-8')
-            self.headers[u'content-type'] = u'application/json; charset=utf-8'
+            body = json.dumps(self.data).encode("utf-8")
+            self.headers["content-type"] = "application/json; charset=utf-8"
         elif self.fargs is not None:
             if any(isinstance(val, (tuple, list)) for val in self.fargs.values()):
                 boundary = "---%s" % random.randrange(1e9)
@@ -193,30 +229,40 @@ class Requester(object):
                 for key, val in self.fargs.items():
                     if isinstance(val, (tuple, list)):
                         for v in val:
-                            formParts.append('--{0}\r\n'
-                                             'Content-Disposition: form-data; name="{1}"\r\n'
-                                             'Content-Type: text/plain; charset=utf-8\r\n'
-                                             '\r\n{2}'.format(boundary, key, v))
+                            formParts.append(
+                                "--{0}\r\n"
+                                'Content-Disposition: form-data; name="{1}"\r\n'
+                                "Content-Type: text/plain; charset=utf-8\r\n"
+                                "\r\n{2}".format(boundary, key, v)
+                            )
                     else:
-                        formParts.append('--{0}\r\n'
-                                         'Content-Disposition: form-data; name="{1}"\r\n'
-                                         'Content-Type: text/plain; charset=utf-8\r\n'
-                                         '\r\n{2}'.format(boundary, key, val))
-                formParts.append('\r\n--{0}--'.format(boundary))
+                        formParts.append(
+                            "--{0}\r\n"
+                            'Content-Disposition: form-data; name="{1}"\r\n'
+                            "Content-Type: text/plain; charset=utf-8\r\n"
+                            "\r\n{2}".format(boundary, key, val)
+                        )
+                formParts.append("\r\n--{0}--".format(boundary))
                 form = "".join(formParts)
-                body = form.encode(encoding='utf-8')
-                self.headers[u'content-type'] = u'multipart/form-data; boundary={0}'.format(boundary)
+                body = form.encode(encoding="utf-8")
+                self.headers["content-type"] = (
+                    "multipart/form-data; boundary={0}".format(boundary)
+                )
             else:
-                formParts = [u"{0}={1}".format(key, val) for key, val in self.fargs.items()]
-                form = u'&'.join(formParts)
-                form = quote_plus(form, '&=')
-                body = form.encode(encoding='utf-8')
-                self.headers[u'content-type'] = u'application/x-www-form-urlencoded; charset=utf-8'
+                formParts = [
+                    "{0}={1}".format(key, val) for key, val in self.fargs.items()
+                ]
+                form = "&".join(formParts)
+                form = quote_plus(form, "&=")
+                body = form.encode(encoding="utf-8")
+                self.headers["content-type"] = (
+                    "application/x-www-form-urlencoded; charset=utf-8"
+                )
         else:
             body = self.body
 
-        if body and (u'content-length' not in self.headers):
-            self.lines.append(httping.packHeader(u'Content-Length', str(len(body))))
+        if body and ("content-length" not in self.headers):
+            self.lines.append(httping.packHeader("Content-Length", str(len(body))))
 
         for name, value in self.headers.items():
             self.lines.append(httping.packHeader(name, value))
@@ -231,15 +277,18 @@ class Respondent(httping.Parsent):
     """
     Nonblocking HTTP Client Respondent class (HTTP message parser only).
     """
+
     Retry = 100
 
-    def __init__(self,
-                 redirects=None,
-                 redirectable=True,
-                 events=None,
-                 retry=None,
-                 leid=None,
-                 **kwa):
+    def __init__(
+        self,
+        redirects=None,
+        redirectable=True,
+        events=None,
+        retry=None,
+        leid=None,
+        **kwa,
+    ):
         super(Respondent, self).__init__(**kwa)
 
         self.status = None
@@ -257,9 +306,7 @@ class Respondent(httping.Parsent):
         self.leid = None
         self.eventSource = None
 
-    def reinit(self,
-               redirectable=None,
-               **kwa):
+    def reinit(self, redirectable=None, **kwa):
         super(Respondent, self).reinit(**kwa)
         if redirectable is not None:
             self.redirectable = True if redirectable else False
@@ -280,7 +327,7 @@ class Respondent(httping.Parsent):
             connection = self.headers.get("connection")
             if connection and "close" in connection.lower():
                 self.persisted = False
-            elif (not self.chunked and self.length is None):
+            elif not self.chunked and self.length is None:
                 self.persisted = False
         elif self.version == (1, 0):
             self.persisted = False
@@ -294,8 +341,12 @@ class Respondent(httping.Parsent):
             return
         self.headers = Hict()
         if self.closed and not self.msg:
-            raise httping.PrematureClosure("Connection closed unexpectedly while parsing response head")
-        lineParser = httping.parseLine(raw=self.msg, eols=(CRLF, LF), kind="status line")
+            raise httping.PrematureClosure(
+                "Connection closed unexpectedly while parsing response head"
+            )
+        lineParser = httping.parseLine(
+            raw=self.msg, eols=(CRLF, LF), kind="status line"
+        )
         while True:
             line = next(lineParser)
             if line is not None:
@@ -316,10 +367,14 @@ class Respondent(httping.Parsent):
         else:
             raise httping.UnknownProtocol(version)
 
-        leaderParser = httping.parseLeader(raw=self.msg, eols=(CRLF, LF), kind="leader header line")
+        leaderParser = httping.parseLeader(
+            raw=self.msg, eols=(CRLF, LF), kind="leader header line"
+        )
         while True:
             if self.closed and not self.msg:
-                raise httping.PrematureClosure("Connection closed unexpectedly while parsing response header")
+                raise httping.PrematureClosure(
+                    "Connection closed unexpectedly while parsing response header"
+                )
             headers = next(leaderParser)
             if headers is not None:
                 leaderParser.close()
@@ -347,37 +402,42 @@ class Respondent(httping.Parsent):
         else:
             self.length = None
 
-        if ((self.status == httping.NO_CONTENT or self.status == httping.NOT_MODIFIED) or
-                (100 <= self.status < 200) or (self.method == "HEAD")):
+        if (
+            (self.status == httping.NO_CONTENT or self.status == httping.NOT_MODIFIED)
+            or (100 <= self.status < 200)
+            or (self.method == "HEAD")
+        ):
             self.length = 0
 
         contentType = self.headers.get("content-type")
         if contentType:
-            if u';' in contentType:
-                contentType, sep, encoding = contentType.rpartition(u';')
+            if ";" in contentType:
+                contentType, sep, encoding = contentType.rpartition(";")
                 if encoding:
                     self.encoding = encoding
 
-            if 'text/event-stream' in contentType.lower():
+            if "text/event-stream" in contentType.lower():
                 self.evented = True
-                self.eventSource = httping.EventSource(raw=self.body,
-                                                       events=self.events,
-                                                       dictable=self.dictable)
+                self.eventSource = httping.EventSource(
+                    raw=self.body, events=self.events, dictable=self.dictable
+                )
             else:
                 self.evented = False
 
-            if 'application/json' in contentType.lower():
+            if "application/json" in contentType.lower():
                 self.jsoned = True
             else:
                 self.jsoned = False
 
         self.checkPersisted()
 
-        if self.status in (httping.MULTIPLE_CHOICES,
-                           httping.MOVED_PERMANENTLY,
-                           httping.FOUND,
-                           httping.SEE_OTHER,
-                           httping.TEMPORARY_REDIRECT):
+        if self.status in (
+            httping.MULTIPLE_CHOICES,
+            httping.MOVED_PERMANENTLY,
+            httping.FOUND,
+            httping.SEE_OTHER,
+            httping.TEMPORARY_REDIRECT,
+        ):
             self.redirectant = True
 
         self.headed = True
@@ -399,7 +459,9 @@ class Respondent(httping.Parsent):
                 chunkParser = httping.parseChunk(raw=self.msg)
                 while True:
                     if self.closed and not self.msg:
-                        raise httping.PrematureClosure("Connection closed unexpectedly while parsing response body chunk")
+                        raise httping.PrematureClosure(
+                            "Connection closed unexpectedly while parsing response body chunk"
+                        )
                     result = next(chunkParser)
                     if result is not None:
                         chunkParser.close()
@@ -415,11 +477,15 @@ class Respondent(httping.Parsent):
                     self.body.extend(chunk)
                     if self.evented:
                         self.eventSource.parse()
-                        if (self.eventSource.retry is not None and
-                                self.retry != self.eventSource.retry):
+                        if (
+                            self.eventSource.retry is not None
+                            and self.retry != self.eventSource.retry
+                        ):
                             self.retry = self.eventSource.retry
-                        if (self.eventSource.leid is not None and
-                                self.leid != self.eventSource.leid):
+                        if (
+                            self.eventSource.leid is not None
+                            and self.leid != self.eventSource.leid
+                        ):
                             self.leid = self.eventSource.leid
 
                     if self.closed and not self.msg:
@@ -435,11 +501,13 @@ class Respondent(httping.Parsent):
         elif self.length is not None:
             while len(self.msg) < self.length:
                 if self.closed and not self.msg:
-                    raise httping.PrematureClosure("Connection closed unexpectedly while parsing response body")
+                    raise httping.PrematureClosure(
+                        "Connection closed unexpectedly while parsing response body"
+                    )
                 (yield None)
 
-            self.body = self.msg[:self.length]
-            del self.msg[:self.length]
+            self.body = self.msg[: self.length]
+            del self.msg[: self.length]
 
         else:
             while True:
@@ -449,11 +517,15 @@ class Respondent(httping.Parsent):
 
                 if self.evented:
                     self.eventSource.parse()
-                    if (self.eventSource.retry is not None and
-                            self.retry != self.eventSource.retry):
+                    if (
+                        self.eventSource.retry is not None
+                        and self.retry != self.eventSource.retry
+                    ):
                         self.retry = self.eventSource.retry
-                    if (self.eventSource.leid is not None and
-                            self.leid != self.eventSource.leid):
+                    if (
+                        self.eventSource.leid is not None
+                        and self.leid != self.eventSource.leid
+                    ):
                         self.leid = self.eventSource.leid
 
                 if self.closed and not self.msg:

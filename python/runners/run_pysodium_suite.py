@@ -5,26 +5,20 @@ This module adapts Python's unittest framework to run in the browser
 via PyScript, capturing output and displaying it in the page.
 """
 
-import asyncio
-import datetime
-import io
 import sys
 import unittest
 
-import js  # type: ignore
-from pyscript import document
+from core import ui_log
 
 
 def log(msg: str, css_class: str = "info"):
-    """Append a message to the output div."""
-    output = document.querySelector("#output")
-    time = datetime.datetime.now().strftime("%H:%M:%S.%f")[:-3]
-    output.innerHTML += f'<span class="{css_class}">[{time}] {msg}</span>\n'
+    """Emit a structured log entry."""
+    ui_log.emit(msg, css_class)
 
 
 def clear_output():
-    """Clear the output div."""
-    document.querySelector("#output").innerHTML = ""
+    """Clear the active output sink."""
+    ui_log.clear()
 
 
 class BrowserTestResult(unittest.TestResult):
@@ -66,8 +60,11 @@ def _run_full_suite():
 
     try:
         # Import the test module
-        from pysodium_unittest import TestPySodium
-        log("SUCCESS: Imported pysodium_unittest.TestPySodium", "success")
+        from tests.pysodium.pysodium_unittest import TestPySodium
+
+        log(
+            "SUCCESS: Imported tests.pysodium.pysodium_unittest.TestPySodium", "success"
+        )
     except ImportError as exc:
         log(f"FAIL: Could not import pysodium_unittest: {exc}", "fail")
         raise
@@ -88,7 +85,10 @@ def _run_full_suite():
     log("TEST SUMMARY")
     log("================================================================")
     log(f"Tests run:    {result.testsRun}")
-    log(f"Passed:       {len(result.successes)}", "success" if result.successes else "info")
+    log(
+        f"Passed:       {len(result.successes)}",
+        "success" if result.successes else "info",
+    )
     log(f"Failures:     {len(result.failures)}", "fail" if result.failures else "info")
     log(f"Errors:       {len(result.errors)}", "fail" if result.errors else "info")
     log(f"Skipped:      {len(result.skipped)}", "info")
@@ -127,8 +127,8 @@ def run_full_suite(event):
     except Exception as exc:
         log(f"Test suite failed with exception: {exc}", "fail")
         import traceback
+
         log(traceback.format_exc(), "fail")
     finally:
         sys.stdout = stdout
         sys.stderr = stderr
-

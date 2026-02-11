@@ -9,7 +9,11 @@ from oqs.serialize import gen_or_load_stateful_signature_key
 
 import oqs
 
-_skip_names = ["LMS_SHA256_H20_W8_H10_W8", "LMS_SHA256_H20_W8_H15_W8", "LMS_SHA256_H20_W8_H20_W8"]
+_skip_names = [
+    "LMS_SHA256_H20_W8_H10_W8",
+    "LMS_SHA256_H20_W8_H15_W8",
+    "LMS_SHA256_H20_W8_H20_W8",
+]
 
 _KEY_DIR = Path(__file__).resolve().parent.parent / "data" / "xmss_xmssmt_keys"
 
@@ -17,14 +21,24 @@ _KEY_DIR = Path(__file__).resolve().parent.parent / "data" / "xmss_xmssmt_keys"
 # Skip ALL variants except h10 due to slow key generation in browser
 # Only h10 variants are practical (~1-2 second keygen)
 # h15, h16, h20, h25 take minutes to hours
-disabled_sig_patterns = ["_15_", "_15/", "_16_", "_16/", "_20_", "_20/", "_25_", "_40_", "_60_"]
+disabled_sig_patterns = [
+    "_15_",
+    "_15/",
+    "_16_",
+    "_16/",
+    "_20_",
+    "_20/",
+    "_25_",
+    "_40_",
+    "_60_",
+]
 
 # Browser-allowed STFL algorithms (h10 or per-subtree h5 variants)
 # LMS is verify-only in liboqs-python, not included here
 BROWSER_ALLOWED_STFL = [
     # XMSS single-tree h10 (~2-3 sec keygen)
     "XMSS-SHA2_10_256",
-    "XMSS-SHAKE_10_256", 
+    "XMSS-SHAKE_10_256",
     "XMSS-SHA2_10_512",
     "XMSS-SHAKE_10_512",
     "XMSS-SHA2_10_192",
@@ -40,7 +54,9 @@ if platform.system() == "Windows":
 
 
 def _load_or_generate_key(alg_name: str) -> Tuple[oqs.StatefulSignature, bytes]:
-    private_key, public_key = gen_or_load_stateful_signature_key(alg_name, dir_name=_KEY_DIR)
+    private_key, public_key = gen_or_load_stateful_signature_key(
+        alg_name, dir_name=_KEY_DIR
+    )
 
     if private_key is not None:
         sig = oqs.StatefulSignature(alg_name, secret_key=private_key)

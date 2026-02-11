@@ -10,6 +10,39 @@ python serve.py
 
 Then open `http://localhost:8000` in your browser.
 
+## CI/CD (GitHub Actions)
+
+This repo now includes a baseline workflow at `.github/workflows/keriwasm-ci.yml` with:
+
+- `quality-gates` job
+  - compiles Python modules (`python -m compileall -q python`)
+  - verifies runtime layout and PyScript mappings (`python ci/check_runtime_layout.py`)
+- `browser-wasm-smoke` job
+  - serves the app locally
+  - runs a headless Chromium smoke test via Playwright (`python ci/smoke_browser.py`)
+  - checks `/index.html` package smoke output summary
+  - checks `/pages/test-harness.html` renders run controls
+
+Optional manual self-hosted smoke workflow:
+
+- `.github/workflows/keriwasm-self-hosted-smoke.yml`
+- runs the same browser smoke checks on a runner labeled:
+  - `[self-hosted, linux, wasm, keriwasm]`
+
+To reproduce key checks locally:
+
+```bash
+python -m compileall -q python
+python ci/check_runtime_layout.py
+```
+
+Optional self-hosted runner migration:
+
+- Keep `quality-gates` on `ubuntu-latest`
+- Switch the browser job `runs-on` to labels like:
+  - `[self-hosted, linux, wasm, keriwasm]`
+- Register your runner in GitHub with matching labels.
+
 
 ## PyScript
 
@@ -43,26 +76,24 @@ KeriWasm/
     - blake3
     - liboqs
     - pysodium
-- `workers/` — web workers -- this was from an earlier iteration before pyscript
-        - however, I think that web workers will come back when we start integrating HTMX with pyscript
-        - the file in here is not used in index.html
+- `workers/` — web workers used for long-running browser tasks (liboqs runs here)
 
 ### Key files to highlight
 
 - `index.html` — entry point for the app
 - `pyscript.toml` — config for pyscript
 - `python/hio/` — minimal hio scheduler package trimmed for Pyodide
-- `python/hio_bridge.py` — port of hio to run on the web (yields to the browser event loop)
-- `python/test_runner_doer.py` — test runner as a hio Doer that executes a queued list of tests
-- `python/test_loaders.py` — functions that build the test queue from liboqs test modules
-- `python/run_liboqs_suite.py` — PyScript entry point that wires the hio runner to the liboqs tests
+- `python/core/hio_bridge.py` — port of hio to run on the web (yields to the browser event loop)
+- `python/core/test_runner_doer.py` — test runner as a hio Doer that executes a queued list of tests
+- `python/core/test_loaders.py` — functions that build test queues from liboqs/blake3 test modules
+- `python/runners/run_liboqs_suite.py` — PyScript entry point that wires the hio runner to the liboqs tests
     - the following are lifted from pyoqs:
-    - `python/test_kem.py` — liboqs KEM correctness and edge-case tests
-    - `python/test_sig.py` — liboqs signature correctness tests (including context-string support)
-    - `python/test_stfl_sig.py` — stateful signature (XMSS/XMSSMT) tests filtered for browser-feasible algorithms
-- `python/run_pysodium_suite.py` — browser-friendly runner for the full pysodium unittest suite
-- `python/pysodium_unittest.py` — from libsodium library, the unittest definitions used by the pysodium runner
-- `python/package_tests.py` — smoke tests to verify key packages import and run in PyScript
+    - `python/tests/liboqs/test_kem.py` — liboqs KEM correctness and edge-case tests
+    - `python/tests/liboqs/test_sig.py` — liboqs signature correctness tests (including context-string support)
+    - `python/tests/liboqs/test_stfl_sig.py` — stateful signature (XMSS/XMSSMT) tests filtered for browser-feasible algorithms
+- `python/runners/run_pysodium_suite.py` — browser-friendly runner for the full pysodium unittest suite
+- `python/tests/pysodium/pysodium_unittest.py` — from libsodium library, the unittest definitions used by the pysodium runner
+- `python/runners/package_tests.py` — smoke tests to verify key packages import and run in PyScript
 
 
 ## How the Python runs in the browser
@@ -75,9 +106,12 @@ KeriWasm/
 ### 2. Execution Environment
 - **Runtime**: Pyodide runs partially on the main thread (blocking for heavy compute unless using workers).
 - **Scripts**: The `<script type="py">` tags in `index.html` execute the following Python initialization scripts:
-  - `python/package_tests.py`: Defines the `run_tests()` function.
-  - `python/run_pysodium_suite.py`: Defines the `run_full_suite()` function.
-  - `python/run_liboqs_suite.py`: Defines the `run_liboqs_suite()` function.
+  - `python/runners/package_tests.py`: Defines the `run_tests()` function.
+  - `python/runners/run_pysodium_suite.py`: Defines the `run_full_suite()` function.
+  - `python/runners/run_blake3_suite.py`: Defines the `run_blake3_suite()` function.
+  - `python/runners/run_hio_client_bridge.py`: Defines the `run_hio_client_bridge()` function.
+  - `python/runners/run_indexeddb_suite.py`: Defines the `run_indexeddb_suite()` function.
+  - `python/runners/indexeddb_probe.py`: Defines the `run_indexeddb_probe()` function.
 
   - all of these scripts are run in the browser! This puts the functions they have defined in the global scope of the browser.
   - the `type="py"` attribute on the `<script>` tag tells PyScript to run python using pyodide.

@@ -23,6 +23,21 @@ class HeaderMiddleware:
         resp.set_header("Access-Control-Allow-Origin", "*")
 
 
+class RedirectResource:
+    """Simple GET/HEAD redirect helper for convenience routes."""
+
+    def __init__(self, location: str):
+        self.location = location
+
+    def on_get(self, req, resp):
+        resp.status = falcon.HTTP_302
+        resp.set_header("Location", self.location)
+
+    def on_head(self, req, resp):
+        resp.status = falcon.HTTP_302
+        resp.set_header("Location", self.location)
+
+
 def run(host="", port=8000):
     """
     Run a hio-based static server for KeriWasm.
@@ -32,6 +47,11 @@ def run(host="", port=8000):
 
     tymist = tyming.Tymist(tyme=0.0)
     app = falcon.App(middleware=[HeaderMiddleware()])
+
+    # Convenience route so /pages does not error as a directory lookup.
+    pages_redirect = RedirectResource("/pages/test-harness.html")
+    app.add_route("/pages", pages_redirect)
+    app.add_route("/pages/", pages_redirect)
 
     static_dir = os.path.dirname(os.path.abspath(__file__))
     sink = serving.StaticSink(staticDirPath=static_dir)
