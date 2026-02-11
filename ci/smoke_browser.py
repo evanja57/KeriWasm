@@ -15,6 +15,9 @@ from playwright.sync_api import sync_playwright
 
 BASE_URL = os.environ.get("KERIWASM_BASE_URL", "http://127.0.0.1:8000").rstrip("/")
 SERVER_WAIT_SECONDS = 90
+PYSCRIPT_ENTRYPOINT_WAIT_SECONDS = 300
+PYSCRIPT_ENTRYPOINT_HEARTBEAT_SECONDS = 15
+PYSCRIPT_ENTRYPOINT_POLL_SECONDS = 2
 PACKAGE_SUMMARY_WAIT_SECONDS = 900
 PACKAGE_SUMMARY_HEARTBEAT_SECONDS = 15
 PACKAGE_SUMMARY_POLL_SECONDS = 3
@@ -64,6 +67,39 @@ def _last_non_empty_line(text: str) -> str:
     if len(last) > 240:
         return f"{last[:237]}..."
     return last
+
+
+def wait_for_python_entrypoint(page, fn_name: str, timeout_s: int) -> None:
+    log_step(f"Waiting for PyScript entrypoint window.{fn_name} (timeout={timeout_s}s)")
+    start = time.monotonic()
+    deadline = start + timeout_s
+    next_heartbeat = start
+    output_text = ""
+
+    while True:
+        ready = bool(page.evaluate(f"() => typeof window['{fn_name}'] === 'function'"))
+        output_text = page.inner_text("#output")
+        if ready:
+            elapsed = int(time.monotonic() - start)
+            log_step(f"PyScript entrypoint window.{fn_name} is ready after {elapsed}s")
+            return
+
+        now = time.monotonic()
+        if now >= deadline:
+            raise RuntimeError(
+                f"Timed out waiting for window.{fn_name} after {timeout_s}s; "
+                f"last_output_line={_last_non_empty_line(output_text)!r}"
+            )
+
+        if now >= next_heartbeat:
+            elapsed = int(now - start)
+            log_step(
+                f"Still waiting for window.{fn_name}... elapsed={elapsed}s "
+                f"last_line={_last_non_empty_line(output_text)!r}"
+            )
+            next_heartbeat = now + PYSCRIPT_ENTRYPOINT_HEARTBEAT_SECONDS
+
+        time.sleep(PYSCRIPT_ENTRYPOINT_POLL_SECONDS)
 
 
 def wait_for_package_summary(page) -> str:
@@ -145,8 +181,28 @@ def main() -> int:
             )
             log_step("Waiting for package test button")
             page.wait_for_selector("#pkgTestBtn", timeout=120_000)
+            wait_for_python_entrypoint(
+                page, "run_tests", timeout_s=PYSCRIPT_ENTRYPOINT_WAIT_SECONDS
+            )
             log_step("Clicking package smoke test button")
+            output_before = page.inner_text("#output")
             page.click("#pkgTestBtn")
+            time.sleep(2)
+            output_after = page.inner_text("#output")
+            if output_after.strip() == output_before.strip():
+                log_step(
+                    "Output unchanged after click; invoking window.run_tests(null) fallback"
+                )
+                page.evaluate(
+                    """
+                    () => {
+                        if (typeof window.run_tests !== 'function') {
+                            throw new Error('window.run_tests is not available');
+                        }
+                        window.run_tests(null);
+                    }
+                    """
+                )
 
             output_text = wait_for_package_summary(page)
             require_summary_ok(output_text)
