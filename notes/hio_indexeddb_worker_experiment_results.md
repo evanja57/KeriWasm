@@ -1,8 +1,6 @@
 Hio `ado()` + IndexedDB Worker Results
 --------------------------------------
 
-Date: 2026-03-06
-
 Question
 --------
 
@@ -258,7 +256,7 @@ call shape while flushing real async IndexedDB writes underneath.
 
 What it tests:
 
-- whether the sync-looking facade fails closed if backend flush diverges
+- whether the sync-looking wrapper fails closed if backend flush diverges
 
 Code:
 
@@ -285,14 +283,14 @@ async def _sync_facade_negative_tests(log: LogFn) -> None:
     try:
         suber.get(("beta",))
     except MirrorDivergenceError:
-        log("Diverged facade blocks further sync calls", "success")
+        log("Diverged wrapper blocks further sync calls", "success")
 ```
 
 Output:
 
 ```text
 Flush failure surfaced explicit divergence: Flush failed in putVal: forced flush failure for divergence test during putVal
-Diverged facade blocks further sync calls
+Diverged wrapper blocks further sync calls
 ```
 
 What it proved:
@@ -307,11 +305,15 @@ Final Output Summary
 The worker run ended with:
 
 ```text
-Promotion Gate
---------------
-Phase 1 proved raw async IndexedDB under ado(real=True)
-Phase 2 proved runtime CRUD call-shape compatibility for Suber/Komer probes
-Startup/open-path integration remains deferred by design
+Val CRUD + prefix iteration succeeded
+Ordinal family CRUD succeeded
+send(None) on loop-backed coroutine failed as expected
+Timeout/cancel produced no persisted write
+Suber-compatible val path preserved immediate reads and persisted flush
+Ordinal Suber-compatible path preserved deterministic ordered flush
+Komer-compatible val path preserved existing sync call shape
+Flush failure surfaced explicit divergence: Flush failed in putVal: forced flush failure for divergence test during putVal
+Diverged facade blocks further sync calls
 ```
 
 
@@ -320,11 +322,13 @@ Conclusions
 
 - Raw async IndexedDB worked under `Doist.ado(real=True)` in the Pyodide
   worker.
-- The `.send(None)` approach is not a reliable bridge for loop-backed async
-  work.
+- The `.send(None)` approach was not reliable once the coroutine touched real
+  event-loop-backed async work.
 - The task-create / poll pattern worked for the IndexedDB case.
 - The sync-looking runtime surface worked for the tested `Suber`, ordinal, and
-  `Komer` style cases.
-- This test stage covered worker-hosted runtime CRUD only. It did not cover
+  `Komer` style calls, with persistence happening later at flush.
+- If flush failed, the wrapper failed closed instead of pretending the write
+  succeeded.
+- This round only covered worker-hosted runtime CRUD. It did not cover
   startup/open-path behavior such as `LMDBer.reopen`, `Habery.setup`, or
   constructor-time DB access.
